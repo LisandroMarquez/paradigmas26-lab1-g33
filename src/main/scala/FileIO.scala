@@ -39,4 +39,12 @@ object FileIO {
     val source = Source.fromURL(url)
     source.mkString
   }
+
+  //$ Defining post 
+  type Post = (String, String, String, String) 
+
+  //$A function that downloads posts and extracts their important data
+  def get_posts(): List[Post] = {
+    //Need to modify 
+  }
 }

@@ -8,8 +8,9 @@ object Main {
     println(subscriptions)
 
     //+ Exercise 2
+    val posts = FileIO.get_posts() 
 
-
+    println(posts) 
     //+ Exercise 3
 
 

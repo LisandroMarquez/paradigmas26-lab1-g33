@@ -8,6 +8,10 @@ object FileIO {
     I do not even know why would you create a JSON library and not make to convert types in any way possible,
       via function or something. This is unbealivable...
   */
+
+  //! Exercise 2 (get_posts() did not finish, in any case, 
+  //! if you want to run the project, delete it temporarily and then add it again.
+
   implicit val formats: DefaultFormats.type = DefaultFormats
 
   //$ Define alias
@@ -43,8 +47,28 @@ object FileIO {
   //$ Defining post 
   type Post = (String, String, String, String) 
 
-  //$A function that downloads posts and extracts their important data
+  //$ A function that downloads posts and extracts their important data
   def get_posts(): List[Post] = {
-    //Need to modify 
+    //$ Download the JSON
+    def downloadAllFeeds(): List[(String, String)] = {
+      readSubscriptions().map { case (name, url) =>
+      (name, downloadFeed(url)) }
+    }
+
+    //$ Extract data from feeds: 
+    //$ First parse the feeds
+    val parse_list = downloadAllFeeds().map{ case (name, jsonString) => 
+    (name, parse(jsonString)) }  
+
+    //$ Then extract the data with the canonized date 
+    parse_list.flatMap { case (name, json) =>
+      (json \ "data" \ "children").children.map { post =>
+        val title = (post \ "data" \ "title").extract[String] 
+        val selftext = (post \ "data" \ "selftext").extract[String] 
+        val created_utc = (post \ "data" \ "created_utc").extract[Double].toLong
+        val date = TextProcessing.formatDateFromUTC(created_utc)
+        (name, title, selftext, date) 
+      }
+    }
   }
 }

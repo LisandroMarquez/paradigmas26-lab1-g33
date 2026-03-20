@@ -2,15 +2,13 @@ import scala.io.Source
 import org.json4s._
 import org.json4s.jackson.JsonMethods._
 
+
 object FileIO {
   /*
     I asked ChatGPT why it is necessary, apparently json4s does not know how to convert JSON to scala types.
     I do not even know why would you create a JSON library and not make to convert types in any way possible,
       via function or something. This is unbealivable...
   */
-
-  //! Exercise 2 (get_posts() did not finish, in any case, 
-  //! if you want to run the project, delete it temporarily and then add it again.
 
   implicit val formats: DefaultFormats.type = DefaultFormats
 
@@ -46,6 +44,12 @@ object FileIO {
 
   //$ Defining post 
   type Post = (String, String, String, String) 
+
+  //$ Auxiliary object for canonizing the date
+  object TextProcessing {
+    def formatDateFromUTC(utc: Long): String =
+      java.time.Instant.ofEpochSecond(utc).toString
+  }
 
   //$ A function that downloads posts and extracts their important data
   def get_posts(): List[Post] = {

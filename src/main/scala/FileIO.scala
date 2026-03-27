@@ -9,10 +9,9 @@ object FileIO {
     I do not even know why would you create a JSON library and not make to convert types in any way possible,
       via function or something. This is unbealivable...
   */
-
   implicit val formats: DefaultFormats.type = DefaultFormats
 
-  //$ Define alias
+  //$ Define alias (name, url)
   type Subscription = (String, String)
 
   //$ Pure function to read subscriptions from a JSON file
@@ -29,10 +28,11 @@ object FileIO {
     val json = parse(jsonString)
 
     //! Now we convert to List[Subscription] format
-    json.children.map { sub =>
-      val name = (sub \ "name").extract[String]
-      val url = (sub \ "url").extract[String]
-      (name, url)
+    json.children.map{
+      sub =>
+        val name = (sub \ "name").extract[String]
+        val url = (sub \ "url").extract[String]
+        (name, url)
     }
   }
 
@@ -42,10 +42,10 @@ object FileIO {
     source.mkString
   }
 
-  //$ Defining post 
-  type Post = (String, String, String, String) 
+  //$ Defining alias (name, title, selftext, date)
+  type Post = (String, String, String, String)
 
-  //$ Auxiliary object for canonizing the date
+  //! Auxiliary object for canonizing the date
   object TextProcessing {
     def formatDateFromUTC(utc: Long): String =
       java.time.Instant.ofEpochSecond(utc).toString
@@ -53,26 +53,31 @@ object FileIO {
 
   //$ A function that downloads posts and extracts their important data
   def get_posts(): List[Post] = {
-    //$ Download the JSON
+    //& Download the JSON
     def downloadAllFeeds(): List[(String, String)] = {
-      readSubscriptions().map { case (name, url) =>
-      (name, downloadFeed(url)) }
+      readSubscriptions().map{
+        case (name, url) =>
+          (name, downloadFeed(url))
+      }
     }
 
-    //$ Extract data from feeds: 
-    //$ First parse the feeds
-    val parse_list = downloadAllFeeds().map{ case (name, jsonString) => 
-    (name, parse(jsonString)) }  
+    //+ First parse the feeds
+    val parse_list = downloadAllFeeds().map{
+      case (name, jsonString) =>
+        (name, parse(jsonString))
+    }  
 
-    //$ Then extract the data with the canonized date 
-    parse_list.flatMap { case (name, json) =>
-      (json \ "data" \ "children").children.map { post =>
-        val title = (post \ "data" \ "title").extract[String] 
-        val selftext = (post \ "data" \ "selftext").extract[String] 
-        val created_utc = (post \ "data" \ "created_utc").extract[Double].toLong
-        val date = TextProcessing.formatDateFromUTC(created_utc)
-        (name, title, selftext, date) 
-      }
+    //% Then extract the data with the canonized date 
+    parse_list.flatMap{
+      case (name, json) =>
+        (json \ "data" \ "children").children.map{
+          post =>
+            val title = (post \ "data" \ "title").extract[String]
+            val selftext = (post \ "data" \ "selftext").extract[String]
+            val created_utc = (post \ "data" \ "created_utc").extract[Double].toLong
+            val date = TextProcessing.formatDateFromUTC(created_utc)
+            (name, title, selftext, date)
+        }
     }
   }
 }

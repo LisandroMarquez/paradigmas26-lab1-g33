@@ -4,14 +4,14 @@ object Filters {
   //$ Individual filters for each case
   def formatEmptySelftext(posts: List[Post]): List[Post] = {
     posts.filter {
-      case =>
+      case (_, _, selftext, _)=>
         selftext.trim.nonEmpty
     }
   }
 
   def formatEmptyTitle(posts: List[Post]): List[Post] = {
     posts.filter {
-      case =>
+      case (_, title, _, _)=>
         title.trim.nonEmpty
     }
   }
@@ -26,4 +26,5 @@ object Filters {
   def removeEmptyPosts(posts: List[Post]): List[Post] = {
     val postsWithoutEmptySelftext = formatEmptySelftext(posts)
     formatEmptyTitle(postsWithoutEmptySelftext)
+  }
 }

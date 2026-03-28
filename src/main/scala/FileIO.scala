@@ -58,7 +58,7 @@ object FileIO {
       readSubscriptions().map{
         case (name, url) =>
           (name, downloadFeed(url))
-      }
+      } 
     }
 
     //+ First parse the feeds
@@ -71,7 +71,7 @@ object FileIO {
     parse_list.flatMap{
       case (name, json) =>
         (json \ "data" \ "children").children.map{
-          post =>
+          post => 
             val title = (post \ "data" \ "title").extract[String]
             val selftext = (post \ "data" \ "selftext").extract[String]
             val created_utc = (post \ "data" \ "created_utc").extract[Double].toLong
@@ -80,4 +80,13 @@ object FileIO {
         }
     }
   }
-}
+
+  // Function to run the post list and extract the suscription data (maybe is bad)
+  def total_statistics(sub : Subscription): Int = {
+    def name_score(): (String, Int) = {
+      // Filter the posts of the suscription 
+      sub.filter(post._1 == sub._1) 
+    }
+      // For later 
+      post_list.foldLeft(0)((acum, _) => acum + 1) 
+  }  

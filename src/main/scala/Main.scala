@@ -24,6 +24,5 @@ object Main {
 
 
     //+ Exercise 6
-    
   }
 }

@@ -15,31 +15,42 @@ object FileIO {
   type Subscription = (String, String)
 
   //$ Pure function to read subscriptions from a JSON file
-  def readSubscriptions(): List[Subscription] = {
-    //& Read JSON File
-    val source = Source.fromFile("subscriptions.json")
+  def readSubscriptions(): Option[List[Subscription]] = {
 
-    //? Convert to String and close fd
-    val jsonString =
-      try source.mkString
-      finally source.close()
+    try {
+      //& Read JSON File
+      val source = Source.fromFile("subscriptions.json")
 
-    //+ Convert String to "JSON" format
-    val json = parse(jsonString)
+      //? Convert to String and close fd
+      val jsonString = try source.mkString finally source.close()
 
-    //! Now we convert to List[Subscription] format
-    json.children.map{
-      sub =>
-        val name = (sub \ "name").extract[String]
-        val url = (sub \ "url").extract[String]
-        (name, url)
+      //+ Convert String to "JSON" format
+      val json = parse(jsonString)
+
+      //! Now we convert to List[Subscription] format
+      val subscriptions = json.children.flatMap { sub =>
+        for { 
+          name <- (sub \ "name").extractOpt[String]
+          url <- (sub \ "url").extractOpt[String]
+        } yield (name, url)
+      }
+
+      Some(subscriptions)
+    } catch {
+      case e: Exception => None
     }
   }
 
   //$ Pure function to download JSON feed from a URL
-  def downloadFeed(url: String): String = {
-    val source = Source.fromURL(url)
-    source.mkString
+  def downloadFeed(url: String): Option[String] = {
+    try {
+      val source = Source.fromURL(url)
+      //& We need to close the source after reading, so we use a try-finally block
+      val jsonString = try source.mkString finally source.close()
+      Some(jsonString) 
+    } catch {
+      case _: Exception => None
+    }
   }
 
   //$ Defining alias (name, title, selftext, date)
@@ -55,9 +66,10 @@ object FileIO {
   def get_posts(): List[Post] = {
     //& Download the JSON
     def downloadAllFeeds(): List[(String, String)] = {
-      readSubscriptions().map{
-        case (name, url) =>
-          (name, downloadFeed(url))
+      readSubscriptions()
+      .getOrElse(List.empty)
+      .flatMap{ case (name, url) =>
+          downloadFeed(url).map(json => (name, json))
       } 
     }
 
@@ -70,13 +82,14 @@ object FileIO {
     //% Then extract the data with the canonized date 
     parse_list.flatMap{
       case (name, json) =>
-        (json \ "data" \ "children").children.map{
+        (json \ "data" \ "children").children.flatMap{
           post => 
-            val title = (post \ "data" \ "title").extract[String]
-            val selftext = (post \ "data" \ "selftext").extract[String]
-            val created_utc = (post \ "data" \ "created_utc").extract[Double].toLong
-            val date = TextProcessing.formatDateFromUTC(created_utc)
-            (name, title, selftext, date)
+          for {
+            title <- (post \ "data" \ "title").extractOpt[String]
+            selftext <- (post \ "data" \ "selftext").extractOpt[String]
+            created_utc <- (post \ "data" \ "created_utc").extractOpt[Double].map(_.toLong)
+            date = TextProcessing.formatDateFromUTC(created_utc)
+          } yield (name, title, selftext, date)
         }
     }
   }
@@ -90,3 +103,4 @@ object FileIO {
       // For later 
       post_list.foldLeft(0)((acum, _) => acum + 1) 
   }  
+}

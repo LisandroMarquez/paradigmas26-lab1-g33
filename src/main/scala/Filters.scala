@@ -4,14 +4,14 @@ object Filters {
   //$ Individual filters for each case
   def formatEmptySelftext(posts: List[Post]): List[Post] = {
     posts.filter {
-      case (_, _, selftext, _)=>
+      case (_, _, selftext, _, _)=>
         selftext.trim.nonEmpty
     }
   }
 
   def formatEmptyTitle(posts: List[Post]): List[Post] = {
     posts.filter {
-      case (_, title, _, _)=>
+      case (_, title, _, _, _)=>
         title.trim.nonEmpty
     }
   }

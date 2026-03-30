@@ -54,7 +54,8 @@ object FileIO {
   }
 
   //$ Defining alias (name, title, selftext, date)
-  type Post = (String, String, String, String)
+  // Int is a modification of Exercise 6 
+  type Post = (String, String, String, String, Int)
 
   //! Auxiliary object for canonizing the date
   object TextProcessing {
@@ -89,18 +90,16 @@ object FileIO {
             selftext <- (post \ "data" \ "selftext").extractOpt[String]
             created_utc <- (post \ "data" \ "created_utc").extractOpt[Double].map(_.toLong)
             date = TextProcessing.formatDateFromUTC(created_utc)
-          } yield (name, title, selftext, date)
+            // Modification of exercise 6 
+            score <- (post \ "data" \ "score").extractOpt[Int]
+          } yield (name, title, selftext, date, score)
         }
     }
   }
 
   // Function to run the post list and extract the suscription data (maybe is bad)
-  def total_statistics(sub : Subscription): Int = {
-    def name_score(): (String, Int) = {
-      // Filter the posts of the suscription 
-      sub.filter(post._1 == sub._1) 
-    }
-      // For later 
-      post_list.foldLeft(0)((acum, _) => acum + 1) 
+  def total_score(posts: List[Post]): Int = {
+    // Calculate the sub score
+    posts.foldLeft(0)((acum, posts) => acum + posts._5) 
   }  
 }

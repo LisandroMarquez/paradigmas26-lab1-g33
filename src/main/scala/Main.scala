@@ -24,5 +24,18 @@ object Main {
 
 
     //+ Exercise 6
-  }
+    println("PRUEBA DEL SCORE Y NAME DEL EJERCICIO 6")
+    FileIO.readSubscriptions() match {
+      case Some(subs) =>
+        subs.foreach { sub =>
+        val filter_posts = posts.filter(_._1 == sub._1)
+        val score = FileIO.total_score(filter_posts)
+        println(s"Name: ${sub._1} Score: $score")
+      }
+
+      case None =>
+      println("Error leyendo suscripciones")
+    } 
+
+  } 
 }

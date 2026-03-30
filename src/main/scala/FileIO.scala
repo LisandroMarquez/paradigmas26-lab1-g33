@@ -102,4 +102,9 @@ object FileIO {
     // Calculate the sub score
     posts.foldLeft(0)((acum, posts) => acum + posts._5) 
   }  
+
+  // Function to extract the first five posts
+  //def first_posts(subs_posts: List[Post]): List[Post] = {
+    
+  //}
 }

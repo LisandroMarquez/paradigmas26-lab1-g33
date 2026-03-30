@@ -25,7 +25,7 @@ object Main {
 
     //+ Exercise 6
     println("PRUEBA DEL SCORE Y NAME DEL EJERCICIO 6")
-    FileIO.readSubscriptions() match {
+    subscriptions match {
       case Some(subs) =>
         subs.foreach { sub =>
         val filter_posts = posts.filter(_._1 == sub._1)

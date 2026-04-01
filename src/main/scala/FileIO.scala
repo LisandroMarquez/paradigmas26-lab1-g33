@@ -55,7 +55,7 @@ object FileIO {
 
   //$ Defining alias (name, title, selftext, date)
   // Int is a modification of Exercise 6 
-  type Post = (String, String, String, String, Int)
+  type Post = (String, String, String, String, Int, String)
 
   //! Auxiliary object for canonizing the date
   object TextProcessing {
@@ -90,9 +90,10 @@ object FileIO {
             selftext <- (post \ "data" \ "selftext").extractOpt[String]
             created_utc <- (post \ "data" \ "created_utc").extractOpt[Double].map(_.toLong)
             date = TextProcessing.formatDateFromUTC(created_utc)
-            // Modification of exercise 6 
+            // Modifications of exercise 6 
             score <- (post \ "data" \ "score").extractOpt[Int]
-          } yield (name, title, selftext, date, score)
+            url <- (post \ "data" \ "url").extractOpt[String]
+          } yield (name, title, selftext, date, score, url)
         }
     }
   }
@@ -101,10 +102,15 @@ object FileIO {
   def total_score(posts: List[Post]): Int = {
     // Calculate the sub score
     posts.foldLeft(0)((acum, posts) => acum + posts._5) 
-  }  
+  } 
 
-  // Function to extract the first five posts
-  //def first_posts(subs_posts: List[Post]): List[Post] = {
-    
-  //}
+  def first_posts(posts: List[Post]): List[(String, String, String)] = {
+    // Take te first five post 
+    val first_5_post = posts.take(5) 
+
+    // Extract only the title, date and url for the first five posts 
+    first_5_post.map{ post =>
+      (post._2, post._4, post._6) 
+    }
+  }
 }

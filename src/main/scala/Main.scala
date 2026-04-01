@@ -15,7 +15,7 @@ object Main {
     //+ Exercise 3
     val validPosts = Filters.removeEmptyPosts(posts)
     
-    println(validPosts)
+    //println(validPosts)
 
     //+ Exercise 4
 
@@ -37,5 +37,30 @@ object Main {
       println("Error leyendo suscripciones")
     } 
 
-  } 
+    println("PRUEBA DE PALABRAS FRECUENTES CON SUS OCURRENCIAS")
+     subscriptions match {
+      case Some(subs) =>
+        subs.foreach { sub =>
+        val filter_posts = posts.filter(_._1 == sub._1)
+        val frecuent_words = Analytics.topWords(filter_posts, 10) 
+        println(s"Name: ${sub._1} Top 10 Word Frecuencies: $frecuent_words")
+      } 
+
+      case None => 
+      println("Error leyendo suscripciones")
+    } 
+
+    println("PRUEBA DE TOP 5 PALABRAS")
+      subscriptions match {
+      case Some(subs) =>
+        subs.foreach { sub =>
+        val filter_posts = posts.filter(_._1 == sub._1)
+        val first_5_post = FileIO.first_posts(filter_posts) 
+        println(s"Name: ${sub._1} First 5 posts: $first_5_post")
+      } 
+
+      case None =>
+      println("Error leyendo suscripciones")
+    }
+  }
 }

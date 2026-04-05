@@ -5,9 +5,9 @@ import org.json4s.jackson.JsonMethods._
 
 object FileIO {
   /*
-    I asked ChatGPT why it is necessary, apparently json4s does not know how to convert JSON to scala types.
-    I do not even know why would you create a JSON library and not make to convert types in any way possible,
-      via function or something. This is unbealivable...
+  * I asked ChatGPT why it is necessary, apparently json4s does not know how to convert JSON to scala types.
+  * I do not even know why would you create a JSON library and not make to convert types in any way possible,
+  *   via function or something. This is unbealivable...
   */
   implicit val formats: DefaultFormats.type = DefaultFormats
 
@@ -16,27 +16,29 @@ object FileIO {
 
   //$ Pure function to read subscriptions from a JSON file
   def readSubscriptions(): Option[List[Subscription]] = {
-
     try {
       //& Read JSON File
       val source = Source.fromFile("subscriptions.json")
 
       //? Convert to String and close fd
       val jsonString = try source.mkString finally source.close()
-
+      
       //+ Convert String to "JSON" format
       val json = parse(jsonString)
 
       //! Now we convert to List[Subscription] format
-      val subscriptions = json.children.flatMap { sub =>
-        for { 
-          name <- (sub \ "name").extractOpt[String]
-          url <- (sub \ "url").extractOpt[String]
-        } yield (name, url)
+      val subscriptions = json.children.flatMap {
+        sub =>
+          for {
+            name <- (sub \ "name").extractOpt[String]
+            url <- (sub \ "url").extractOpt[String]
+          }
+          yield (name, url)
       }
 
       Some(subscriptions)
-    } catch {
+    }
+    catch {
       case e: Exception => None
     }
   }
@@ -69,48 +71,54 @@ object FileIO {
     def downloadAllFeeds(): List[(String, String)] = {
       readSubscriptions()
       .getOrElse(List.empty)
-      .flatMap{ case (name, url) =>
-          downloadFeed(url).map(json => (name, json))
+      .flatMap{
+        case (name, url) =>
+          downloadFeed(url).map(
+            json => (name, json)
+          )
       } 
     }
 
     //+ First parse the feeds
     val parse_list = downloadAllFeeds().map{
-      case (name, jsonString) =>
-        (name, parse(jsonString))
-    }  
+      case (name, jsonString) => (name, parse(jsonString))
+    }
 
     //% Then extract the data with the canonized date 
     parse_list.flatMap{
       case (name, json) =>
         (json \ "data" \ "children").children.flatMap{
           post => 
-          for {
-            title <- (post \ "data" \ "title").extractOpt[String]
-            selftext <- (post \ "data" \ "selftext").extractOpt[String]
-            created_utc <- (post \ "data" \ "created_utc").extractOpt[Double].map(_.toLong)
-            date = TextProcessing.formatDateFromUTC(created_utc)
-            // Modifications of exercise 6 
-            score <- (post \ "data" \ "score").extractOpt[Int]
-            url <- (post \ "data" \ "url").extractOpt[String]
-          } yield (name, title, selftext, date, score, url)
+            for {
+              title <- (post \ "data" \ "title").extractOpt[String]
+              selftext <- (post \ "data" \ "selftext").extractOpt[String]
+              created_utc <- (post \ "data" \ "created_utc").extractOpt[Double].map(_.toLong)
+              date = TextProcessing.formatDateFromUTC(created_utc)
+              //* Modifications for exercise 6 
+              score <- (post \ "data" \ "score").extractOpt[Int]
+              url <- (post \ "data" \ "url").extractOpt[String]
+            }
+            yield (name, title, selftext, date, score, url)
         }
     }
   }
 
-  // Function to run the post list and extract the suscription data (maybe is bad)
+  //$ Function to run the post list and extract the suscription data (maybe is bad)
   def total_score(posts: List[Post]): Int = {
-    // Calculate the sub score
-    posts.foldLeft(0)((acum, posts) => acum + posts._5) 
-  } 
+    //% Calculate the sub score
+    posts.foldLeft(0)(
+      (acum, posts) => acum + posts._5
+    )
+  }
 
+  //$ Function to get only title, date and utl from first 5 posts
   def first_posts(posts: List[Post]): List[(String, String, String)] = {
-    // Take te first five post 
-    val first_5_post = posts.take(5) 
+    //& Take te first five post
+    val first_5_post = posts.take(5)
 
-    // Extract only the title, date and url for the first five posts 
-    first_5_post.map{ post =>
-      (post._2, post._4, post._6) 
+    //% Extract only the title, date and url for the first five posts
+    first_5_post.map{
+      post => (post._2, post._4, post._6)
     }
   }
 }

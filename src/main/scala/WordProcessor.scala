@@ -2,9 +2,8 @@ import scala.io.Source
 import FileIO.Post
 
 object Analytics {
-  
-    //& We define a set of stopwords to filter out common words that do not carry significant meaning
-    val stopwords = Set(
+  //$ We define a set of stopwords to filter out common words that do not carry significant meaning
+  val stopwords = Set(
     "the", "about", "above", "after", "again", "against", "all", "am", "an",
     "and", "any", "are", "aren't", "as", "at", "be", "because", "been",
     "before", "being", "below", "between", "both", "but", "by", "can't",
@@ -26,28 +25,36 @@ object Analytics {
     "who's", "whom", "why", "why's", "with", "won't", "would",
     "wouldn't", "you", "you'd", "you'll", "you're", "you've", "your", "yours",
     "yourself", "yourselves"
-    )
-    // Function to count word frequencies in the selftext of the posts
-    def countWordFrequencies(posts: List[Post]): Map[String, Int] = {
-        posts
-            // we convert the list of posts into a list of words by splitting the selftext of each post into words, \\s+ is a regex that matches one or more whitespace characters 
-            .flatMap (p=> p._3.split("\\s+"))
-            // we filter out the words that are empty, stopwords, or do not start with an uppercase letter
-            .filter(word => word.nonEmpty && !stopwords.contains(word.toLowerCase) && word(0).isUpper)
-            // we group the words by their identity, which means that we create a map where the keys are the unique words and the values are lists of occurrences of those words
-            .groupBy(Word => Word)
-            // we calculate the frequency of each word by counting the number of occurrences in each list
-            .mapValues(_.size)
-            .toMap
-    }
-    // Function to get the top n most frequent words
-    def topWords(posts: List[Post], n: Int): List[(String, Int)] = {
-        countWordFrequencies(posts)
-            .toList
-            .sortBy(-_._2) // Sort by frequency in descending order
-            .take(n) // Take the top n words
-    }
+  )
+
+  //$ Function to count word frequencies in the selftext of the posts
+  def countWordFrequencies(posts: List[Post]): Map[String, Int] = {
+    posts
+      //% Convert list of posts into a list of words by splitting the selftext of each post into words, \\s+ is a regex that matches one or more whitespace characters
+      .flatMap (
+        p => p._3.split("\\s+")
+      )
+      //% Filter out empty words, "stopwords", or do not start with an uppercase letter
+      .filter(
+        word =>
+          word.nonEmpty
+          && !stopwords.contains(word.toLowerCase)
+          && word(0).isUpper
+       )
+      //% Group the words by their identity, which means that we create a map where the keys are the unique words and the values are lists of occurrences of those words
+      .groupBy(Word => Word)
+      //% Calculate the frequency of each word by counting the number of occurrences in each list
+      .mapValues(_.size)
+      .toMap
   }
 
-
-
+  //$ Function to get the top n most frequent words
+  def topWords(posts: List[Post], n: Int): List[(String, Int)] = {
+    countWordFrequencies(posts)
+      .toList
+      //% Sort by frequency in descending order
+      .sortBy(-_._2)
+      //% Consider only top n words
+      .take(n)
+  }
+}

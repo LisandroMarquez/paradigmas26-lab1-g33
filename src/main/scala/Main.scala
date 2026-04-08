@@ -1,53 +1,103 @@
 object Main {
+
   def main(args: Array[String]): Unit = {
-    val header = s"Reddit Post Parser\n${"=" * 40}"
 
-    //+ Exercise 1
     val subscriptions = FileIO.readSubscriptions()
-
-    println(subscriptions)
-
-    //+ Exercise 2
-    val posts = FileIO.get_posts() 
-
-    // println(posts) 
-
-    //+ Exercise 3
+    val posts = FileIO.get_posts()
     val validPosts = Filters.removeEmptyPosts(posts)
-    
-    // println(validPosts)
 
-    //+ Exercise 4
+    println(Formatters.formatTitle("Informe de Suscripciones"))
 
-
-    //+ Exercise 5
-
-
-    //+ Exercise 6
-    println(s""" 
-+==================================================================================================+
-|                                     INFORME SOBRE SUSCRIPCIONES                                  |
-+==================================================================================================+""")
     subscriptions match {
       case Some(subs) =>
-        subs.foreach {
-          sub =>
-            val filter_posts = posts.filter(_._1 == sub._1)
-            val score = FileIO.total_score(filter_posts)
-            val frecuent_words = Analytics.topWords(filter_posts, 10)
-            val first_5_post = FileIO.first_posts(filter_posts)
-            println(s"""+--------------------------------------------------------------------------------------------------+
-Nombre: ${sub._1}
-Score total: $score
-Top 10 Palabras con mayor frecuencia: $frecuent_words
-Primeros 5 post (Titulo, fecha, url): $first_5_post""")
+
+        subs.foreach { sub =>
+          val filter_posts = validPosts.filter(_._1 == sub._1)
+          val score = FileIO.total_score(filter_posts)
+          val frequent_words = Analytics.topWords(filter_posts, 10)
+          val first_5_post = FileIO.first_posts(filter_posts)
+
+          println(
+            Formatters.formatSubscriptionReport(
+              sub._1,
+              score,
+              frequent_words,
+              first_5_post
+            )
+          )
         }
-      println(s"""+--------------------------------------------------------------------------------------------------+
-+==================================================================================================+
-|                                             FIN INFORME                                          |
-+==================================================================================================+""")
+
+        println(Formatters.formatTitle("Fin del Informe"))
+
+        menuSubscriptions(subs, validPosts)
+
       case None =>
-        println("Error leyendo suscripciones") 
+        println("Error leyendo suscripciones")
+    }
+  }
+
+  def menuSubscriptions(
+    subs: List[FileIO.Subscription],
+    posts: List[FileIO.Post]
+  ): Unit = {
+
+    val names = MenuLogic.subscriptionNames(subs)
+
+    Interactive.showMenu("Suscripciones disponibles", names)
+
+    val subIndex = Interactive.askOption(names.length)
+
+    if (subIndex == 0) {
+      println("Fin del programa.")
+    } else {
+
+      MenuLogic.choose(subs, subIndex) match {
+        case Some(selectedSub) =>
+          menuPosts(subs, posts, selectedSub)
+
+        case None =>
+          println("Suscripción inválida.")
+          menuSubscriptions(subs, posts)
+      }
+    }
+  }
+
+  def menuPosts(
+    subs: List[FileIO.Subscription],
+    posts: List[FileIO.Post],
+    selectedSub: FileIO.Subscription
+  ): Unit = {
+
+    val subPosts = MenuLogic.postsBySubscription(posts, selectedSub._1)
+
+    if (subPosts.isEmpty) {
+      println("No hay posts disponibles.")
+      menuSubscriptions(subs, posts)
+
+    } else {
+
+      val titles = MenuLogic.postTitles(subPosts)
+
+      Interactive.showMenu(s"Posts en ${selectedSub._1}", titles)
+
+      val postIndex = Interactive.askOption(titles.length)
+
+      if (postIndex == 0) {
+        menuSubscriptions(subs, posts)
+
+      } else {
+
+        MenuLogic.choose(subPosts, postIndex) match {
+          case Some(post) =>
+            println(Formatters.formatPost(post))
+
+            menuPosts(subs, posts, selectedSub)
+
+          case None =>
+            println("Post inválido.")
+            menuPosts(subs, posts, selectedSub)
+        }
+      }
     }
   }
 }
